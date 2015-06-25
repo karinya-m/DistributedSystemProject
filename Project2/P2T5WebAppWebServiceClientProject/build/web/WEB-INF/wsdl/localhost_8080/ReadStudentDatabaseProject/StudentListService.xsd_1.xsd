@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is Metro/2.2.0-1 (tags/2.2.0u1-7139; 2012-06-02T10:55:19+0000) JAXWS-RI/2.2.6-2 JAXWS/2.2 svn-revision#unknown. --><xs:schema xmlns:tns="http://kmakaew.andrew.cmu.edu/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://kmakaew.andrew.cmu.edu/">
+
+<xs:element name="createStudent" type="tns:createStudent"/>
+
+<xs:element name="createStudentResponse" type="tns:createStudentResponse"/>
+
+<xs:element name="deleteStudent" type="tns:deleteStudent"/>
+
+<xs:element name="deleteStudentResponse" type="tns:deleteStudentResponse"/>
+
+<xs:element name="findAllStudentNames" type="tns:findAllStudentNames"/>
+
+<xs:element name="findAllStudentNamesResponse" type="tns:findAllStudentNamesResponse"/>
+
+<xs:element name="readStudent" type="tns:readStudent"/>
+
+<xs:element name="readStudentResponse" type="tns:readStudentResponse"/>
+
+<xs:element name="studenttable" type="tns:studenttable"/>
+
+<xs:element name="updateStudent" type="tns:updateStudent"/>
+
+<xs:element name="updateStudentResponse" type="tns:updateStudentResponse"/>
+
+<xs:complexType name="createStudent">
+<xs:sequence>
+<xs:element name="arg0" type="xs:short" minOccurs="0"/>
+<xs:element name="arg1" type="xs:string" minOccurs="0"/>
+<xs:element name="arg2" type="xs:double" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="createStudentResponse">
+<xs:sequence>
+<xs:element name="return" type="xs:boolean"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="readStudent">
+<xs:sequence>
+<xs:element name="arg0" type="xs:short" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="readStudentResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:studenttable" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="studenttable">
+<xs:sequence>
+<xs:element name="scholarshipAmount" type="xs:double" minOccurs="0"/>
+<xs:element name="studentId" type="xs:short" minOccurs="0"/>
+<xs:element name="studentName" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="deleteStudent">
+<xs:sequence>
+<xs:element name="arg0" type="xs:short" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="deleteStudentResponse">
+<xs:sequence>
+<xs:element name="return" type="xs:boolean"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="findAllStudentNames">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="findAllStudentNamesResponse">
+<xs:sequence>
+<xs:element name="return" type="xs:anyType" minOccurs="0" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="updateStudent">
+<xs:sequence>
+<xs:element name="arg0" type="xs:short" minOccurs="0"/>
+<xs:element name="arg1" type="xs:string" minOccurs="0"/>
+<xs:element name="arg2" type="xs:double" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="updateStudentResponse">
+<xs:sequence>
+<xs:element name="return" type="xs:boolean"/>
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

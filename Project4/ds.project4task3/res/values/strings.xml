@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Please select date of birth and click &quot;Submit&quot;.</string>
+    <string name="app_name">Age Calculator</string>
+    <string name="error">Sorry, cannot calculate age.</string>
+</resources>

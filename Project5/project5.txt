@@ -1,0 +1,172 @@
+95-702 Distributed Systems              Due: Midnight, Monday, November 26, 2012
+
+Project 5                                                      Map Reduce Exercises
+
+	The purpose of this project is to introduce you to Big Data, Hadoop, HDFS 
+and MapReduce. The Java code and dataset that we will experiment with and modify is 
+found in the excellent book:
+
+      	"Hadoop: The Definitive Guide, Second Edition, by Tom White. 
+	Copyright 2011 Tom White, 978-1-449-38973-4."
+
+	Get the example code and dataset running on your machine (this is Task 0). 
+Then, when you are familiar with the way that MapReduce works, develop solutions 
+to Task 1 and Task 2. It is important that when you submit your final answers that 
+all names and documentation have been changed and updated to fit the task. It is 
+obvious to us that you will begin by modifying the code in Task 0 and that is fine.
+But be sure to change all names, variables and documentation to fit the requirements 
+of Task 1 and 2 prior to submitting your work.
+
+        A Windows install is more challenging than a MAC OSX install. If downloading 
+to Windows, you will need to first install Cygwin and OpenSSH. See www.cygwin.com. 
+OpenSSH comes with Cygwin. 
+
+	For Windows, we found the following blog very helpful:
+http://blog.sqltrainer.com/2012/01/installing-and-configuring-apache.html. In 
+addition we found the use of the MetaPad text editor to be useful. Note that it
+is able to save files in DOS or Unix format.  
+
+        With a Windows install, you will be entering commands in a Unix shell and 
+sometimes these commands require paths to be formatted in the way that DOS likes.
+For example, to compile java classes and reference map reduce jar files you may 
+have a line like the following:
+
+    $javac -cp "C:/cygwin/usr/local/hadoop/hadoop-ant-1.0.4.jar;C:/...and so on. " *.java
+    
+    In other words, we use a DOS like path with semicolons not Unix colons. In
+addition, the entire path starts from the C: drive and note the use of double 
+quotes.
+
+    In the case of a Windows install, after installing Cygwin, you will need to
+install a patch to Hadoop. Be sure to see 
+http://stackoverflow.com/questions/9755508/problems-running-simple-map-reduce-hadoop-examples-in-cygwin
+ 
+    The patch and directions are here:
+
+https://github.com/congainc/patch-hadoop_7682-1.0.x-win
+
+    We want to run Hadoop in standalone (or local) mode.
+
+    Hadoop is written in Java and will run on version 6 or later. 
+
+    Download a stable Hadoop release from here:
+    http://hadoop.apache.org/releases.html#Download       
+
+    To unpack it on Unix, try
+    % tar xzf hadoop-x.y.z.tar.gz
+
+
+    We want to be able to execute Hadoop commands. So, you need to place the path to Hadoop's bin 
+    directory in your path variable. 
+
+    On Mac OS X, my .bash_profile contains the following (you too should have Java_Home set.):
+
+	JAVA_HOME=/Library/Java/Home
+	export JAVA_HOME;
+	HADOOP_INSTALL=/Applications/hadoop-1.0.4
+	export HADOOP_INSTALL
+	export PATH=${PATH}:/Users/mm6/mm6/android-sdk-macosx/tools:/Users/mm6/mm6/android-sdk-macosx/platform-tools:${HADOOP_INSTALL}/bin
+
+        You can test your installation with the command:
+        $hadoop version
+        
+        To compile, we can reference the jar files individually that we have downloaded to /Applications/hadoop-1.0.4/. This is shown 
+        below when using the javac command.
+
+
+        The first dataset that you will work with is from the National Climatic Data Center (http:www.ncdc.noaa.gov).
+        There are three files on the course schedule from NCDC:
+        1901.txt 1902.txt and combinedYears.txt
+        Each line represents a report from a weather station during a particular year. Note how the program below is able to read
+        the temperature and year and quality of reading.
+         
+
+        Here is a copy of the Mapper Code from  "Hadoop: The Definitive Guide":
+
+	import java.io.IOException;	import org.apache.hadoop.io.IntWritable;	import org.apache.hadoop.io.LongWritable; 
+	import org.apache.hadoop.io.Text;	import org.apache.hadoop.mapred.MapReduceBase; 
+	import org.apache.hadoop.mapred.Mapper;	import org.apache.hadoop.mapred.OutputCollector; 
+	import org.apache.hadoop.mapred.Reporter;	public class MaxTemperatureMapper extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {		private static final int MISSING = 9999;		public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws 			IOException {
+                        // Get line from input file. This was passed in by Hadoop as value.
+                        // We have no use for the key (file offset) so we are ignoring it.
+           			String line = value.toString();
+
+                        // Get year when weather data was collected.
+                        // This field is at a fixed position within a line.			String year = line.substring(15, 19);
+
+                        // Get the temperature too.
+			int airTemperature;			if (line.charAt(87) == '+') { // parseInt doesn't like leading plus signs				airTemperature = Integer.parseInt(line.substring(88, 92));			} else {				airTemperature = Integer.parseInt(line.substring(87, 92)); 
+                        }
+
+                        // Get quality of reading. If not missing and of good quality then
+                        // produce intermediate (year,temp).			
+                        String quality = line.substring(92, 93);			if (airTemperature != MISSING && quality.matches("[01459]")) {
+
+                             // for each year in input, reduce will be called with
+                             // (year,[temp,temp,temp,…])
+                             // They key is year and the list of temps will be placed in an iterator.
+				output.collect(new Text(year), new IntWritable(airTemperature)); }			}
+	 }
+
+
+         The Reducer code is also from the book.
+
+	import java.io.IOException; import java.util.Iterator;	import org.apache.hadoop.io.IntWritable;	import org.apache.hadoop.io.Text;	import org.apache.hadoop.mapred.MapReduceBase;	import org.apache.hadoop.mapred.OutputCollector;	import org.apache.hadoop.mapred.Reducer; import org.apache.hadoop.mapred.Reporter;	
+	public class MaxTemperatureReducer extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {		public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, 
+                                   IntWritable> output, Reporter reporter) throws IOException {			
+                        // from the list of values, find the maximum
+                        int maxValue = Integer.MIN_VALUE; 
+                        while (values.hasNext()) {			     maxValue = Math.max(maxValue, values.next().get()); 
+                        }
+                        // emit (key = year, value = maxTemp = max for year)			output.collect(key, new IntWritable(maxValue)); 
+		}	}
+
+        And, to get it all running and tied together:
+
+	import org.apache.hadoop.fs.Path;	import org.apache.hadoop.io.IntWritable;	import org.apache.hadoop.io.Text;	import org.apache.hadoop.mapred.FileInputFormat;
+	import org.apache.hadoop.mapred.FileOutputFormat; import org.apache.hadoop.mapred.JobClient;	import org.apache.hadoop.mapred.JobConf;	
+	public class MaxTemperature {		public static void main(String[] args) throws IOException { 
+			if (args.length != 2) {				System.err.println("Usage: MaxTemperature <input path> <output path>");				System.exit(-1); 
+ 			}			JobConf conf = new JobConf(MaxTemperature.class); 
+			conf.setJobName("Max temperature");			FileInputFormat.addInputPath(conf, new Path(args[0])); 
+			FileOutputFormat.setOutputPath(conf, new Path(args[1]));			conf.setMapperClass(MaxTemperatureMapper.class); 
+			conf.setReducerClass(MaxTemperatureReducer.class);			conf.setOutputKeyClass(Text.class); 
+			conf.setOutputValueClass(IntWritable.class);			JobClient.runJob(conf);
+		 }	}
+
+        In order to compile this code, I am running this command on Mac OS X:
+        $javac -cp /Applications/hadoop-1.0.4/hadoop-ant-1.0.4.jar:/Applications/hadoop-1.0.4/hadoop-client-1.0.4.jar:/Applications/hadoop-1.0.4/hadoop-core-1.0.4.jar:. MaxTemperature.java
+
+        In order to execute the code, I am running these two commands on MAC OS X:
+        $export HADOOP_CLASSPATH=.        $hadoop MaxTemperature input/ncdc/sample.txt output
+
+        Note that if you run this a second time you will get an error. The reason is that Hadoop will not
+        automatically write over the output directory. Within the command, you can change the directory 
+        name to something else or delete the directory and run the command again. This so we don't lose
+        a lot of work that may have been done to produce the output directory.
+
+
+Task 0 
+
+     Run the Max Temperature application. Experiment with this code so that
+     you become familiar with the way that MaxTemperatureMapper and MaxTemperatureReducer
+     work. Add print statements, experiment and play. Submit three documented Java files
+     in a single zip file. These will be called MaxTemperature.java, MaxTemperatureMapper.java and
+     MaxTemperatureReducer.java. The zip file will be called P5T0.zip.
+
+Task 1
+ 
+     The words.txt file contains all of the words in the English language and is 
+     found on the course schedule. Download this to your machine.
+     Modify the code in Task 0 so that it reads the words.txt file on the course schedule
+     and computes the number of words in the file. (There is also a shortWords.txt file for testing).
+     Submit three documented Java files in a single zip file. These will be called WordCounter.java, 
+     WordCounterMapper.java and WordCounterReducer.java. The zip file will be called P5T1.zip.
+
+Task 2
+
+     Modify the code in Task 1 so that it reads the words.txt file on the course schedule
+     and computes the number of words in the file that begin with a consonant and the 
+     number of words in the file that begin with a vowel. Submit three documented Java files
+     in a single zip file. These will be called ConsVowelCtr.java, ConsVowelCtrMapper.java and
+     ConsVowelCtrReducer.java. The zip file will be called P5T2.zip.
